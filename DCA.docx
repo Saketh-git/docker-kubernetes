@@ -1,0 +1,57 @@
+Docker file:
+A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image.
+The docker build command builds an image from a Dockerfile and a context. Context is the set of files at a specified location PATH or URL. PATH is a directory on your local filesystem. URL is a Git repository location.
+Ex-1: docker build –t img_name .    (. Means current dir)
+ . option is the context or source that the docker build command should use during the build.
+Ex-2: docker build –t img_name https://github.com/Dockerfile.git (context is git central repo)
+When building an image using a remote Git repository as build context, Docker performs a git clone of the repository on the local machine, and sends those files as build context to the daemon.
+ADD and COPY instruction look for files need to be added in image from context.
+You use the -f flag with docker build to point to a Dockerfile anywhere in your file system.
+mkdir -p dockerfiles context
+mv Dockerfile dockerfiles && mv hello.txt context
+docker build --no-cache -t helloapp:v2 -f dockerfiles/Dockerfile context
+You can specify a repository and tag at which to save the new image if the build succeeds.   Build context (.):
+docker build -t shykes/myapp .
+tag the image into multiple repositories
+docker build -t shykes/myapp:1.0.2 -t shykes/myapp:latest .
+Dockerfile EX
+FROM ubuntu:18.04
+COPY . /app
+RUN make /app
+CMD python /app/app.py
+•	FROM creates a layer from the ubuntu:18.04 Docker image.
+•	COPY adds files from your Docker client’s current directory.
+•	RUN builds your application with make.
+•	CMD specifies what command to run within the container.
+All these layers are Read Only (R/O) layers
+When you create a new container, you add a new writable layer (R/W)on top of the underlying layers. This layer is often called the “container layer”. All changes made to the running container, such as writing new files, modifying existing files, and deleting files, are written to this thin writable container layer.
+The major difference between a container and an image is the top writable layer. When the container is deleted, the writable layer is also deleted. The underlying image remains unchanged.
+docker ps –s     (Container size on disk)
+size: the amount of data (on disk) that is used for the writable layer of each container.
+Virtual size: the amount of data used for the read-only image data used by the container plus the container’s writable layer size.
+When you use docker pull to pull down an image from a repository, each layer is pulled down separately, and stored in Docker’s local storage area, which is usually /var/lib/docker/on Linux hosts. 
+
+Proxy server settings
+Proxy servers can block connections to your web app once it’s up and running. If you are behind a proxy server, add the following lines to your Dockerfile, using the ENV command to specify the host and port for your proxy servers:
+# Set proxy server, replace host:port with values for your servers
+ENV http_proxy host_value:port_value
+
+DNS settings
+DNS misconfigurations can generate problems with pip. You need to set your own DNS server address to make pip work properly. You might want to change the DNS settings of the Docker daemon. You can edit (or create) the configuration file at /etc/docker/daemon.json with the dns key
+{
+  "dns": ["your_dns_address", "8.8.8.8"]
+}
+The first element of the list is the address of your DNS server. The second item is Google’s DNS which can be used when the first one is not available.
+
+Share your image:
+Push to registries when you want to deploy containers to production. A registry is a collection of repositories, and a repository is a collection of images.
+Note: We use Docker’s public registry here just because it’s free and pre-configured, but there are many public ones to choose from, and you can even set up your own private registry using Docker Trusted Registry.
+If you don’t have a Docker account, sign up for one at hub.docker.com.
+Log in to the Docker public registry on your local machine.
+docker login
+Tag image to upload the image to your desired destination.
+docker tag image username/repository:tag
+docker tag friendlyhello gordon/get-started:part2
+Upload your tagged image to the repository:
+docker push username/repository:tag
+
